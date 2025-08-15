@@ -1,9 +1,11 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
 import torch
+import time
  
 model_name_or_path = "TheBloke/OpenHermes-2.5-Mistral-7B-AWQ"
+model_name_or_path = "/mnt/data_nvme1n1p1/xiping_workpath/models/mistralai/Mistral-7B-Instruct-v0.1"
  
-tokenizer = AutoTokenizer.from_pretrained("teknium/OpenHermes-2.5-Mistral-7B")
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 # model = AutoModelForCausalLM.from_pretrained(
 #     model_name_or_path, torch_dtype=torch.float16, device_map="auto", attn_implementation="flash_attention_2"
 # )
@@ -312,11 +314,22 @@ torch.cuda.reset_peak_memory_stats(model.device)
 torch.cuda.empty_cache()
 torch.cuda.synchronize()
 start_event.record()
-# generation_output = model.generate(**input_ids, do_sample=False, max_new_tokens=512, streamer=streamer)
-generation_output = model.generate(**input_ids, do_sample=False, max_new_tokens=512, streamer=streamer, prompt_lookup_num_tokens=10)
+
+for i in range(1):
+    # streamer=streamer,
+    t1 = time.time()
+    # generation_output = model.generate(**input_ids, do_sample=False, max_new_tokens=512)
+    generation_output = model.generate(**input_ids, do_sample=False, max_new_tokens=512, prompt_lookup_num_tokens=10)
+    t2 = time.time()
+    print(f" == {i}, tm = {t2-t1} s")
+
 end_event.record()
 torch.cuda.synchronize()
 max_memory = torch.cuda.max_memory_allocated(model.device)
 print("Max memory (MB): ", max_memory * 1e-6)
 new_tokens = generation_output.shape[1] - input_ids.input_ids.shape[1]
 print("Throughput (tokens/sec): ", new_tokens / (start_event.elapsed_time(end_event) * 1.0e-3))
+
+# output = tokenizer.decode(generation_output[0][input_ids.input_ids.shape[1]:generation_output.shape[1]])
+output = tokenizer.decode(generation_output[0])
+print(f"Outputs: {output}")
