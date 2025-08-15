@@ -14,6 +14,12 @@ Add "prompt_lookup_num_tokens=10" to generate to enable lookup.
 
 # Algorithm
 
+``0:`` 2 params
+<pre>
+prompt_lookup_num_tokens=4    候选范围，也是second infer的input seq length
+max_matching_ngram_size=2     找candidate的最大关键字ngram长度。（如果找不到，会减小ngram size，再找），会影响找到的最匹配的candidate。
+</pre>
+
 ``1:`` get_candidates
 <pre>
 从当前input prompts的最后2个token，把这两个token作为ngram， 从input prompt开始查找有没有相同token。 <br>
